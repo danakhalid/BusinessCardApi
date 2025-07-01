@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using BusinessCardApi.Models;
+using Microsoft.EntityFrameworkCore;
 
 namespace BusinessCardApi.DataDb
 {
@@ -7,7 +8,8 @@ namespace BusinessCardApi.DataDb
         public AppDbContext(DbContextOptions<AppDbContext> options) : base(options)
         {
         }
-    
+
+        public DbSet<BusinessCard> BusinessCards { get; set; }
 
     }
 }
