@@ -1,4 +1,6 @@
 ﻿using BusinessCardApi.Models;
+using System.Text;
+using System.Xml;
 using System.Xml.Serialization;
 
 namespace BusinessCardApi.Helpers
@@ -50,6 +52,48 @@ namespace BusinessCardApi.Helpers
             var serializer = new XmlSerializer(typeof(List<BusinessCard>));
             var result = serializer.Deserialize(stream) as List<BusinessCard> ?? new List<BusinessCard>();
             return result;
+        }
+
+        public static string ExportToCsv(List<BusinessCard> cards)
+        {
+            var sb = new StringBuilder();
+            sb.AppendLine("Id,Name,Gender,DateOfBirth,Email,Phone,Address,PhotoBase64");
+
+            foreach (var card in cards)
+            {
+                sb.AppendLine($"{card.Id}," +
+                              $"{Escape(card.Name)}," +
+                              $"{Escape(card.Gender)}," +
+                              $"{card.DateOfBirth:yyyy-MM-dd}," +
+                              $"{Escape(card.Email)}," +
+                              $"{Escape(card.Phone)}," +
+                              $"\"{Escape(card.Address)}\"," +
+                              $"{Escape(card.PhotoBase64)}");
+            }
+
+            return sb.ToString();
+        }
+
+        public static string Escape(string? value)
+        {
+            if (string.IsNullOrWhiteSpace(value)) return "";
+            return value.Contains(",") || value.Contains("\"")
+                ? "\"" + value.Replace("\"", "\"\"") + "\""
+                : value;
+        }
+
+        public static string ExportToXml(List<BusinessCard> cards)
+        {
+            var serializer = new XmlSerializer(typeof(List<BusinessCard>), new XmlRootAttribute("ArrayOfBusinessCard"));
+            using var ms = new MemoryStream();
+            var settings = new XmlWriterSettings { Indent = true, Encoding = Encoding.UTF8 };
+
+            using (var writer = XmlWriter.Create(ms, settings))
+            {
+                serializer.Serialize(writer, cards);
+            }
+
+            return Encoding.UTF8.GetString(ms.ToArray());
         }
     }
 }

@@ -12,9 +12,9 @@ namespace BusinessCardApi.Repo
             _appDbContext = appDbContext;
         }
 
-        public IEnumerable<BusinessCard> GetAll()
+        public async Task<List<BusinessCard>> GetAll()
         {
-            return _appDbContext.BusinessCards.ToList();
+            return await _appDbContext.BusinessCards.ToListAsync();
         }
 
         public BusinessCard? GetById(int id)

@@ -4,7 +4,7 @@ namespace BusinessCardApi.Repo
 {
     public interface IBusinessCardRepo
     {
-        IEnumerable<BusinessCard> GetAll();
+        Task<List<BusinessCard>> GetAll();
         void CreateCard(BusinessCard card);
         BusinessCard? GetById(int id);
         void Delete(int id);
