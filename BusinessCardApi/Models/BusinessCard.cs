@@ -1,5 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations.Schema;
 using System.Text.Json.Serialization;
+using System.Xml.Serialization;
 namespace BusinessCardApi.Models
 {
     public class BusinessCard
@@ -13,6 +14,7 @@ namespace BusinessCardApi.Models
 
         [NotMapped]
         [JsonIgnore]
+        [XmlIgnore]
         public IFormFile Photo { get; set; }
 
         public string? PhotoBase64 { get; set; }

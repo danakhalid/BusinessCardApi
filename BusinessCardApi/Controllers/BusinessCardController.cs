@@ -1,7 +1,7 @@
-﻿using BusinessCardApi.Models;
+﻿using BusinessCardApi.Helpers;
+using BusinessCardApi.Models;
 using BusinessCardApi.Repo;
 using Microsoft.AspNetCore.Mvc;
-
 namespace BusinessCardApi.Controllers
 {
     [Route("api/[controller]")]
@@ -14,7 +14,7 @@ namespace BusinessCardApi.Controllers
             _repo = repo;
         }
 
-        [HttpGet]
+        [HttpGet("GetAll")]
         public IActionResult GetAll()
         {
             var cards = _repo.GetAll();
@@ -36,7 +36,7 @@ namespace BusinessCardApi.Controllers
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
 
-            var result = await TryConvertPhotoToBase64Async(model.Photo);
+            var result = await FileHelper.TryConvertPhotoToBase64Async(model.Photo);
 
             if (!result.Success)
                 return BadRequest(result.ErrorMessage);
@@ -60,20 +60,49 @@ namespace BusinessCardApi.Controllers
             return NoContent();
         }
 
-        private async Task<(bool Success, string? Base64, string? ErrorMessage , string? FileName)> TryConvertPhotoToBase64Async(IFormFile? photo, int maxSizeInBytes = 1024 * 1024)
+        [HttpPost("import")]
+        public async Task<IActionResult> ImportCards(IFormFile file, IFormFile? photo)
         {
-            if (photo == null)
-                return (false, null, "No photo provided.", photo.FileName);
+            if (file == null || file.Length == 0)
+                return BadRequest("No file uploaded.");
 
-            using var ms = new MemoryStream();
-            await photo.CopyToAsync(ms);
-            var fileBytes = ms.ToArray();
+            var extension = Path.GetExtension(file.FileName).ToLower();
+            List<BusinessCard> cards;
 
-            if (fileBytes.Length > maxSizeInBytes)
-                return (false, null, "Photo exceeds 1MB.", photo.FileName);
+            using var stream = file.OpenReadStream();
+            if (extension == ".csv")
+            {
+                cards = FileHelper.ParseCsv(stream);
+            }
+            else if (extension == ".xml")
+            {
+                cards = FileHelper.ParseXml(stream);
+            }
+            else
+            {
+                return BadRequest("Unsupported file type.");
+            }
 
-            string base64 = Convert.ToBase64String(fileBytes);
-            return (true, base64, null,photo.FileName);
+            string base64 = null;
+
+            if (photo != null)
+            {
+                var result = await FileHelper.TryConvertPhotoToBase64Async(photo);
+                if (!result.Success)
+                    return BadRequest(result.ErrorMessage);
+
+                base64 = result.Base64;
+            }
+
+            foreach (var card in cards)
+            {
+                if (base64 != null)
+                    card.PhotoBase64 = base64;
+
+                _repo.CreateCard(card);
+            }
+
+            return Ok("business cards imported successfully.");
         }
 
     }
