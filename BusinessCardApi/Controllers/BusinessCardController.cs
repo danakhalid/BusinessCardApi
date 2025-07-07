@@ -15,9 +15,9 @@ namespace BusinessCardApi.Controllers
         }
 
         [HttpGet("GetAll")]
-        public IActionResult GetAll()
+        public async Task<IActionResult> GetAll()
         {
-            var cards = _repo.GetAll();
+            var cards = await _repo.GetAll();
             return Ok(cards);
         }
 
@@ -30,8 +30,10 @@ namespace BusinessCardApi.Controllers
             return Ok(card);
         }
 
-        [HttpPost]
-        public async Task<IActionResult> Post([FromForm] BusinessCard model)
+        [HttpPost("create")]
+        [Consumes("application/json")]
+
+        public async Task<IActionResult> Post([FromBody] BusinessCard model)
         {
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
@@ -103,6 +105,47 @@ namespace BusinessCardApi.Controllers
             }
 
             return Ok("business cards imported successfully.");
+        }
+
+        [HttpGet("ExportViaXml")]
+        public async Task<IActionResult> GetAllViaXmlAsync()
+        {
+            var cards = await _repo.GetAll();
+
+            var exportFolder = Path.Combine("Exports");
+            if (!Directory.Exists(exportFolder))
+            {
+                Directory.CreateDirectory(exportFolder);
+            }
+
+            string xmlContent = FileHelper.ExportToXml(cards);
+            string xmlPath = Path.Combine(exportFolder, "BusinessCards.xml");
+            System.IO.File.WriteAllText(xmlPath, xmlContent);
+
+            return Ok(new
+            {
+                XmlFile = xmlPath
+            });
+        }
+        [HttpGet("ExportViaCsv")]
+        public async Task<IActionResult> GetAllViaCsvAsync()
+        {
+            var cards = await _repo.GetAll();
+
+            var exportFolder = Path.Combine("Exports");
+            if (!Directory.Exists(exportFolder))
+            {
+                Directory.CreateDirectory(exportFolder);
+            }
+
+            string csvContent = FileHelper.ExportToCsv(cards);
+            string csvPath = Path.Combine(exportFolder, "BusinessCards.csv");
+            System.IO.File.WriteAllText(csvPath, csvContent);
+
+            return Ok(new
+            {
+                CsvFile = csvPath,
+            });
         }
 
     }
