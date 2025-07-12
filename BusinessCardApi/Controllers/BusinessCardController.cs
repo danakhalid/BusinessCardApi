@@ -31,9 +31,8 @@ namespace BusinessCardApi.Controllers
         }
 
         [HttpPost("create")]
-        [Consumes("application/json")]
 
-        public async Task<IActionResult> Post([FromBody] BusinessCard model)
+        public async Task<IActionResult> Post([FromForm] BusinessCard model)
         {
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
