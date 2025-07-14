@@ -28,6 +28,14 @@ namespace BusinessCardUnitTest
             Assert.Equal("No file uploaded.", badRequestResult.Value);
         }
 
+        [Fact]
+        public async Task Import_UnsupportFile_ReturnBadRequest()
+        {
+            var file = new FormFile(new MemoryStream(), 0, 10, "file", "file.txt");
+            var result = await _businessCardController.ImportCards(file, null);
+            var badRequestResult = Assert.IsType<BadRequestObjectResult>(result);
+            Assert.Equal("Unsupported file type.", badRequestResult.Value);
+        }
 
     }
 }
